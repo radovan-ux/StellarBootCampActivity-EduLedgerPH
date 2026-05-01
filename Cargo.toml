@@ -1,23 +1,37 @@
-[workspace]
-resolver = "2"
-members = [
-  "contracts/*",
-]
+[package]
+name = "edu_ledger"
+version = "0.1.0"
+edition = "2021"
+description = "On-chain school document registry and scholarship disbursement on Stellar"
+authors = ["EduLedger PH Team"]
+license = "MIT"
 
-[workspace.dependencies]
-soroban-sdk = "25"
+[lib]
+# cdylib → compiled to Wasm for deployment on Stellar
+# rlib   → compiled as a Rust library for test imports
+crate-type = ["cdylib", "rlib"]
 
+[dependencies]
+soroban-sdk = { version = "21.7.6" }
+
+[dev-dependencies]
+# testutils feature enables Env::default(), mock_all_auths(), Address::generate(), etc.
+soroban-sdk = { version = "21.7.6", features = ["testutils"] }
+
+# ── Release Profile ─────────────────────────────────────────────────────────
+# These settings are required to produce a minimal, optimized Wasm binary
+# suitable for deployment on Stellar's ledger.
 [profile.release]
-opt-level = "z"
-overflow-checks = true
-debug = 0
-strip = "symbols"
+opt-level = "z"         # Optimize for binary size (critical for Wasm)
+overflow-checks = true  # Keep integer overflow checks in production
+debug = false           # Strip debug symbols from release build
+strip = "symbols"       # Remove symbol table for smaller output
 debug-assertions = false
-panic = "abort"
-codegen-units = 1
-lto = true
+panic = "abort"         # No unwinding in Wasm — abort on panic
+codegen-units = 1       # Single codegen unit enables best cross-crate optimization
+lto = true              # Link-time optimization — dramatically reduces binary size
 
-# For more information about this profile see https://soroban.stellar.org/docs/basic-tutorials/logging#cargotoml-profile
 [profile.release-with-logs]
+# Use this profile during development to keep event/log output
 inherits = "release"
 debug-assertions = true
